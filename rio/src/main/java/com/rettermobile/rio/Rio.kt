@@ -15,6 +15,7 @@ import com.rettermobile.rio.service.cloud.RioCloudRequestManager
 import com.rettermobile.rio.service.model.exception.CloudNullException
 import com.rettermobile.rio.util.Logger
 import com.rettermobile.rio.util.RioActions
+import com.rettermobile.rio.util.TokenData
 import com.rettermobile.rio.util.TokenManager
 import kotlinx.coroutines.*
 
@@ -41,8 +42,10 @@ class Rio(
         RioConfig.config = config
         RioConfig.retryConfig = retryConfig ?: RioRetryConfig()
 
-        TokenManager.tokenUpdateListener = { sendAuthStatus() }
+        TokenData.tokenUpdateListener = { sendAuthStatus() }
         TokenManager.clearListener = { signOutMethod(type = "sdk") }
+
+        TokenData.initialize()
     }
 
     private var listener: ((RioClientAuthStatus, RioUser?) -> Unit)? = null

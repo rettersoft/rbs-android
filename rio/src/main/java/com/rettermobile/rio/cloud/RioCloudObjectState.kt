@@ -12,7 +12,7 @@ import kotlinx.coroutines.delay
 /**
  * Created by semihozkoroglu on 13.12.2021.
  */
-sealed class RioCloudObjectState constructor(params: RioCloudObjectOptions) {
+sealed class RioCloudObjectState(params: RioCloudObjectOptions) {
 
     val classId = params.classId
     val instanceId = params.instanceId

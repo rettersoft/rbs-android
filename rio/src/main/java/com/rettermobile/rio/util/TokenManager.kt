@@ -21,106 +21,7 @@ import java.util.*
 object TokenManager {
     private val mutex = Mutex()
 
-    var tokenUpdateListener: (() -> Unit)? = null
     var clearListener: (() -> Unit)? = null
-
-    private val gson = Gson()
-
-    private var tokenInfo: RioTokenModel? = null
-        get() {
-            val infoJson = Preferences.getString(Preferences.Keys.TOKEN_INFO)
-
-            return gson.fromJson(infoJson, RioTokenModel::class.java)
-        }
-        set(value) {
-            val isStatusChanged = value?.accessToken?.jwtUserId() != userId()
-
-            field = value
-
-            if (value != null) {
-                // Save to device
-                RioLogger.log("TokenManager.setValue save device")
-
-                Preferences.setString(Preferences.Keys.TOKEN_INFO, gson.toJson(value))
-            } else {
-                // Logout
-                RioLogger.log("TokenManager.setValue LOGOUT")
-                Preferences.deleteKey(Preferences.Keys.TOKEN_INFO)
-                Preferences.deleteKey(Preferences.Keys.TOKEN_INFO_DELTA)
-                Preferences.clearAllData()
-            }
-
-            if (isStatusChanged) {
-                RioLogger.log("TokenManager.setValue isStatusChanged: true user:${Gson().toJson(user())}")
-                tokenUpdateListener?.invoke()
-            } else {
-                RioLogger.log("TokenManager.setValue isStatusChanged: false")
-            }
-        }
-
-    init {
-        val infoJson = Preferences.getString(Preferences.Keys.TOKEN_INFO)
-
-        if (!TextUtils.isEmpty(infoJson)) {
-            try {
-                val token = gson.fromJson(infoJson, RioTokenModel::class.java)
-
-                if (TextUtils.equals(token.accessToken.projectId(), RioConfig.projectId)) {
-                    if (isRefreshTokenExpired(token)) {
-                        // signOut
-                        tokenInfo = null
-                        RioLogger.log("TokenManager.init tokenInfo=null")
-                    } else {
-                        RioLogger.log("TokenManager.init tokenInfo OK")
-                    }
-                } else {
-                    tokenInfo = null
-                    RioLogger.log("TokenManager.init DIFFERENT PROJECT ID!! token setted null!")
-                }
-            } catch (e: Exception) {
-                RioLogger.log("TokenManager.init tokenInfo exception ${e.message}")
-            }
-        }
-    }
-
-    fun isTokenNull(): Boolean = tokenInfo == null
-
-    fun isAccessTokenExpired(): Boolean {
-        if (tokenInfo == null) {
-            RioLogger.log("TokenManager.isAccessTokenExpired tokenInfo is null!!!")
-            return true
-        }
-
-        if (isRefreshTokenExpired(tokenInfo!!)) {
-            return true
-        }
-
-        val jwtAccess = JWT(tokenInfo!!.accessToken)
-        val accessTokenExpiresAt = jwtAccess.getClaim("exp").asLong()!!
-
-        val now = (System.currentTimeMillis() / 1000) - deltaTime() + 60
-
-        val isExpired = now >= accessTokenExpiresAt
-
-        RioLogger.log("TokenManager.isAccessTokenExpired accessToken: ${tokenInfo!!.accessToken}")
-        RioLogger.log("TokenManager.isAccessTokenExpired isExpired: $isExpired")
-
-        return isExpired
-    }
-
-    private fun isRefreshTokenExpired(token: RioTokenModel): Boolean {
-        val jwtAccess = JWT(token.refreshToken)
-        val refreshTokenExpiresAt = jwtAccess.getClaim("exp").asLong()!!
-
-        val now = (System.currentTimeMillis() / 1000) - deltaTime() + 24 * 60 * 60
-
-        val isExpired = now >= refreshTokenExpiresAt
-
-        RioLogger.log("TokenManager.isRefreshTokenExpired refreshToken: ${token.refreshToken}")
-        RioLogger.log("TokenManager.isRefreshTokenExpired isExpired: $isExpired")
-
-        return isExpired
-    }
 
     suspend fun authenticate(customToken: String) {
         val res = runCatching { RioAuthServiceImp.authWithCustomToken(customToken) }
@@ -132,7 +33,7 @@ object TokenManager {
 
             RioFirebaseManager.authenticate(token?.firebase)
 
-            tokenInfo = token
+            TokenData.setTokenData(token)
             calculateDelta()
 
             RioLogger.log("authWithCustomToken token setted")
@@ -152,15 +53,15 @@ object TokenManager {
             RioLogger.log("TokenManager.checkToken started")
 
             if (!TextUtils.isEmpty(accessToken())) {
-                if (isAccessTokenExpired()) {
-                    val refreshToken = tokenInfo?.refreshToken!!
+                if (TokenData.isAccessTokenExpired()) {
+                    val refreshToken = TokenData.token?.refreshToken!!
 
                     refreshWithRetry(refreshToken)
                 }
             }
 
             if (RioFirebaseManager.isNotAuthenticated()) {
-                RioFirebaseManager.authenticate(tokenInfo?.firebase)
+                RioFirebaseManager.authenticate(TokenData.token?.firebase)
             }
 
             RioLogger.log("TokenManager.checkToken ended")
@@ -176,7 +77,7 @@ object TokenManager {
         if (res.isSuccess) {
             RioLogger.log("TokenManager.refreshWithRetry refreshToken success")
 
-            tokenInfo = res.getOrNull()
+            TokenData.setTokenData(res.getOrNull())
             calculateDelta()
         } else {
             if (retryCount > 3) {
@@ -213,19 +114,19 @@ object TokenManager {
 
     fun clear() {
         RioLogger.log("token cleared")
-        tokenInfo = null
+        TokenData.setTokenData(null)
     }
 
-    fun accessToken() = tokenInfo?.accessToken
+    fun accessToken() = TokenData.token?.accessToken
 
     fun deltaTime() = Preferences.getLong(Preferences.Keys.TOKEN_INFO_DELTA, 0)
 
-    fun userId() = tokenInfo?.accessToken?.jwtUserId()
+    fun userId() = TokenData.token?.accessToken?.jwtUserId()
 
-    fun userIdentity() = tokenInfo?.accessToken?.jwtIdentity()
+    fun userIdentity() = TokenData.token?.accessToken?.jwtIdentity()
 
     fun user(): RioUser? {
-        return tokenInfo?.let {
+        return TokenData.token?.let {
             val userId = it.accessToken.jwtUserId()
 
             RioUser(userId, userId.isNullOrEmpty())

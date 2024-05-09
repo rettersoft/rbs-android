@@ -5,6 +5,7 @@ import com.rettermobile.rio.RioConfig
 import com.rettermobile.rio.RioLogger
 import com.rettermobile.rio.service.auth.RioAuthService
 import com.rettermobile.rio.service.cloud.RioCloudService
+import com.rettermobile.rio.util.TokenData
 import com.rettermobile.rio.util.TokenManager
 import okhttp3.CacheControl
 import okhttp3.CertificatePinner
@@ -76,13 +77,13 @@ class RioNetwork {
             val newRequestBuilder = originalRequest.newBuilder()
 
             newRequestBuilder
-                .header("sdk-user-agent", "android-1.6.0")
+                .header("sdk-user-agent", "android-1.6.1")
                 .header("User-Agent", httpAgent())
                 .addHeader("Content-Type", "application/json;charset=UTF-8")
                 .addHeader("x-rio-sdk-client", "android")
                 .addHeader("client-time", System.currentTimeMillis().toString())
                 .addHeader("client-token-delta", TokenManager.deltaTime().toString())
-                .addHeader("client-access-expired", "${TokenManager.isAccessTokenExpired()} - ${TokenManager.isTokenNull()}")
+                .addHeader("client-access-expired", "${TokenData.isAccessTokenExpired()} - ${TokenData.isTokenNull()}")
                 .addHeader("installation-id", TokenManager.getDeviceId())
                 .cacheControl(CacheControl.FORCE_NETWORK)
 
