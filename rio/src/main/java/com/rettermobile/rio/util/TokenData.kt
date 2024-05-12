@@ -39,6 +39,7 @@ object TokenData {
                 }
             } catch (e: Exception) {
                 RioLogger.log("TokenData.init tokenInfo exception ${e.message}")
+                setTokenData(null)
             }
         }
     }
@@ -70,7 +71,7 @@ object TokenData {
     }
 
     fun isAccessTokenExpired(): Boolean {
-        return TokenData.token?.let {
+        return token?.let {
             if (isRefreshTokenExpired(it)) {
                 return true
             }

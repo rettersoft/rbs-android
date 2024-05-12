@@ -174,7 +174,7 @@ class Rio(
     }
 
     private fun signOutMethod(type: String, callback: ((Boolean, Throwable?) -> Unit)? = null) {
-        RioLogger.log("signOut called")
+        RioLogger.log("signOut called $type")
 
         scope.launch(CoroutineExceptionHandler { _, e ->
             RioLogger.log("ExceptionHandler#signOut: ${e.message} \nStackTrace: ${e.stackTraceToString()}")

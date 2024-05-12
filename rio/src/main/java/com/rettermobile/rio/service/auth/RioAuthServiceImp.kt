@@ -28,7 +28,7 @@ object RioAuthServiceImp {
     }
 
     suspend fun signOut(type: String): ResponseBody {
-        RioLogger.log("authWithCustomToken started")
+        RioLogger.log("signOut started")
 
         return api.signOut("${RioConfig.projectId}/TOKEN/signOut?type=$type", RioConfig.culture)
     }

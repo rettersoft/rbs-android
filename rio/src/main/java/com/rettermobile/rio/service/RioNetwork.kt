@@ -64,7 +64,7 @@ class RioNetwork {
         val interceptor = HttpLoggingInterceptor() {
             RioLogger.log("Okhttp: $it")
         }.apply {
-            level = HttpLoggingInterceptor.Level.BODY
+            level = RioConfig.config.logLevel
         }
 
         if (RioConfig.config.sslPinningEnabled) {
@@ -77,7 +77,7 @@ class RioNetwork {
             val newRequestBuilder = originalRequest.newBuilder()
 
             newRequestBuilder
-                .header("sdk-user-agent", "android-1.6.1")
+                .header("sdk-user-agent", "android-1.6.2")
                 .header("User-Agent", httpAgent())
                 .addHeader("Content-Type", "application/json;charset=UTF-8")
                 .addHeader("x-rio-sdk-client", "android")

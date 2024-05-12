@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.rettermobile.rio.util.RioRegion
 import okhttp3.Interceptor
+import okhttp3.logging.HttpLoggingInterceptor
 
 /**
  * Created by semihozkoroglu on 20.01.2022.
@@ -17,6 +18,7 @@ class RioNetworkConfig(
     var gson: Gson = GsonBuilder().create(),
     var headerInterceptor: HeaderInterceptor? = null,
     var firebaseEnable: Boolean = true,
+    var logLevel: HttpLoggingInterceptor.Level = HttpLoggingInterceptor.Level.BODY
 ) {
     private fun init(builder: Builder): RioNetworkConfig {
         if (builder.region == null && builder.customDomain == null) {
@@ -34,6 +36,7 @@ class RioNetworkConfig(
             builder.gson,
             builder.headerInterceptor,
             builder.firebaseEnable,
+            builder.logLevel,
         )
     }
 
@@ -52,6 +55,7 @@ class RioNetworkConfig(
         var gson: Gson = GsonBuilder().create()
         var headerInterceptor: HeaderInterceptor? = null
         var firebaseEnable: Boolean = true
+        var logLevel: HttpLoggingInterceptor.Level = HttpLoggingInterceptor.Level.BODY
 
         fun build() = RioNetworkConfig().init(this)
     }
