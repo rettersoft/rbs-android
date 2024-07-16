@@ -31,7 +31,7 @@ object TokenManager {
 
             val token = res.getOrNull()
 
-            RioFirebaseManager.authenticate(token?.firebase)
+            RioFirebaseManager.authenticate(token?.firebase, signIn = true)
 
             TokenData.setTokenData(token)
             calculateDelta()
@@ -61,7 +61,7 @@ object TokenManager {
             }
 
             if (RioFirebaseManager.isNotAuthenticated()) {
-                RioFirebaseManager.authenticate(TokenData.token?.firebase)
+                RioFirebaseManager.authenticate(TokenData.token?.firebase, signIn = false)
             }
 
             RioLogger.log("TokenManager.checkToken ended")

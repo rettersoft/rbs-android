@@ -18,7 +18,7 @@ internal object RioFirebaseManager {
     private var app: FirebaseApp? = null
     private var auth: FirebaseAuth? = null
 
-    suspend fun authenticate(fireInfo: RioFirebase?) {
+    suspend fun authenticate(fireInfo: RioFirebase?, signIn: Boolean) {
         if (!RioConfig.config.firebaseEnable) return
 
         if (fireInfo == null) return
@@ -33,7 +33,7 @@ internal object RioFirebaseManager {
 //            initApp(fireInfo)
 //        } ?: run { initApp(fireInfo) }
 
-        initApp(fireInfo)
+        initApp(fireInfo, signIn)
     }
 
 //    private suspend fun deleteApp() = suspendCoroutine<Unit> { continuation ->
@@ -52,26 +52,12 @@ internal object RioFirebaseManager {
 //        }
 //    }
 
-    private suspend fun initApp(fireInfo: RioFirebase) = suspendCoroutine<Unit> { continuation ->
-        RioLogger.log("RIOFirebaseManager.initApp called")
+    private suspend fun initApp(fireInfo: RioFirebase, signIn: Boolean) =
+        suspendCoroutine<Unit> { continuation ->
+            RioLogger.log("RIOFirebaseManager.initApp called")
 
-        RioLogger.log("RIOFirebaseManager.initApp fireInfo: ${Gson().toJson(fireInfo)}")
+            RioLogger.log("RIOFirebaseManager.initApp fireInfo: ${Gson().toJson(fireInfo)}")
 
-        val res = runCatching {
-            val apps = FirebaseApp.getApps(RioConfig.applicationContext)
-
-            apps.forEach {
-                if (it.name.startsWith("rio-sdk")) {
-                    app = it
-                }
-            }
-
-            app?.let {
-                auth = FirebaseAuth.getInstance(it)
-            }
-        }
-
-        if (res.isFailure || auth == null) {
             app = FirebaseApp.initializeApp(
                 RioConfig.applicationContext, FirebaseOptions.Builder()
                     .setProjectId(fireInfo.projectId!!)
@@ -85,23 +71,27 @@ internal object RioFirebaseManager {
 
             RioLogger.log("RIOFirebaseManager.initApp instance created $app")
 
-            RioLogger.log("RIOFirebaseManager.initApp currentUser is null")
+            if (signIn) {
+                RioLogger.log("RIOFirebaseManager.initApp currentUser is null")
 
-            auth?.signInWithCustomToken(fireInfo.customToken!!)
-                ?.addOnCompleteListener { task ->
-                    RioLogger.log("RIOFirebaseManager.initApp addOnCompleteListener isSuccessful: ${task.isSuccessful}")
-                    if (task.isSuccessful) {
-                        RioLogger.log("RIOFirebaseManager.authenticate signInWithCustomToken OK")
-                    } else {
-                        RioLogger.log("RIOFirebaseManager.authenticate addOnCompleteListener message: ${task.exception?.message}")
+                auth?.signInWithCustomToken(fireInfo.customToken!!)
+                    ?.addOnCompleteListener { task ->
+                        RioLogger.log("RIOFirebaseManager.initApp addOnCompleteListener isSuccessful: ${task.isSuccessful}")
+                        if (task.isSuccessful) {
+                            RioLogger.log("RIOFirebaseManager.authenticate signInWithCustomToken OK")
+                        } else {
+                            RioLogger.log("RIOFirebaseManager.authenticate addOnCompleteListener message: ${task.exception?.message}")
+                        }
+
+                        RioLogger.log("RIOFirebaseManager.authenticate waited 1000 ms")
+
+                        continuation.resume(Unit)
                     }
-
-                    RioLogger.log("RIOFirebaseManager.authenticate waited 1000 ms")
-
-                    continuation.resume(Unit)
-                }
+            } else {
+                RioLogger.log("RIOFirebaseManager.initApp currentUser is OK")
+                continuation.resume(Unit)
+            }
         }
-    }
 
     fun signOut() {
         auth?.signOut()
