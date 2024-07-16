@@ -58,14 +58,20 @@ internal object RioFirebaseManager {
 
             RioLogger.log("RIOFirebaseManager.initApp fireInfo: ${Gson().toJson(fireInfo)}")
 
-            app = FirebaseApp.initializeApp(
-                RioConfig.applicationContext, FirebaseOptions.Builder()
-                    .setProjectId(fireInfo.projectId!!)
-                    .setApplicationId(fireInfo.envs!!.androidAppId!!)
-                    .setGcmSenderId(fireInfo.envs.gcmSenderId!!)
-                    .setApiKey(fireInfo.apiKey!!)
-                    .build(), "rio-sdk"
-            )
+            val appState = runCatching {
+                app = FirebaseApp.getInstance("rio-sdk")
+            }
+
+            if (appState.isFailure) {
+                app = FirebaseApp.initializeApp(
+                    RioConfig.applicationContext, FirebaseOptions.Builder()
+                        .setProjectId(fireInfo.projectId!!)
+                        .setApplicationId(fireInfo.envs!!.androidAppId!!)
+                        .setGcmSenderId(fireInfo.envs.gcmSenderId!!)
+                        .setApiKey(fireInfo.apiKey!!)
+                        .build(), "rio-sdk"
+                )
+            }
 
             auth = FirebaseAuth.getInstance(app!!)
 
