@@ -77,7 +77,7 @@ internal object RioFirebaseManager {
 
             RioLogger.log("RIOFirebaseManager.initApp instance created $app")
 
-            if (signIn || appState.isFailure) {
+            if (signIn || appState.isFailure || auth?.currentUser == null) {
                 RioLogger.log("RIOFirebaseManager.initApp currentUser is null")
 
                 auth?.signInWithCustomToken(fireInfo.customToken!!)
