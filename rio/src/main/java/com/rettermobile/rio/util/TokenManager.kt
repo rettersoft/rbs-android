@@ -128,8 +128,9 @@ object TokenManager {
     fun user(): RioUser? {
         return TokenData.token?.let {
             val userId = it.accessToken.jwtUserId()
+            val isEndUser = it.accessToken.jwtIdentity() == "enduser"
 
-            RioUser(userId, userId.isNullOrEmpty())
+            RioUser(userId, !isEndUser)
         } ?: kotlin.run { null }
     }
 
