@@ -15,10 +15,10 @@ object RioAuthServiceImp {
 
     private var api: RioAuthService = RioNetwork().getAuthConnection()
 
-    suspend fun refreshToken(refreshToken: String): RioTokenModel {
+    suspend fun refreshToken(accessToken: String, refreshToken: String): RioTokenModel {
         RioLogger.log("refreshToken started")
 
-        return api.refresh("${RioConfig.projectId}/TOKEN/refresh", RefreshTokenRequest(refreshToken), RioConfig.culture)
+        return api.refresh("${RioConfig.projectId}/TOKEN/refresh", RefreshTokenRequest(accessToken, refreshToken), RioConfig.culture)
     }
 
     suspend fun authWithCustomToken(customToken: String): RioTokenModel {

@@ -72,7 +72,9 @@ object TokenManager {
     private suspend fun refreshWithRetry(refreshToken: String, retryCount: Int = 1) {
         RioLogger.log("TokenManager.retryWithSub retryCount: $retryCount")
 
-        val res = runCatching { RioAuthServiceImp.refreshToken(refreshToken) }
+        val res = runCatching {
+            RioAuthServiceImp.refreshToken(accessToken() ?: "", refreshToken)
+        }
 
         if (res.isSuccess) {
             RioLogger.log("TokenManager.refreshWithRetry refreshToken success")
