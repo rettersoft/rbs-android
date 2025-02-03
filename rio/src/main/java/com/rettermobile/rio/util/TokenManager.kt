@@ -22,6 +22,7 @@ object TokenManager {
     private val mutex = Mutex()
 
     var clearListener: (() -> Unit)? = null
+    var tokenRefreshListener: (() -> Unit)? = null
 
     suspend fun authenticate(customToken: String) {
         val res = runCatching { RioAuthServiceImp.authWithCustomToken(customToken) }
@@ -81,6 +82,8 @@ object TokenManager {
 
             TokenData.setTokenData(res.getOrNull())
             calculateDelta()
+
+            tokenRefreshListener?.invoke()
         } else {
             if (retryCount > 3) {
                 RioLogger.log("TokenManager.refreshWithRetry refreshToken fail signOut called")

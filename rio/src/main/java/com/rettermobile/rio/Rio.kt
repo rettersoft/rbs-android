@@ -56,6 +56,10 @@ class Rio(
         sendAuthStatus()
     }
 
+    fun setOnTokenRefreshListener(l: () -> Unit) {
+        TokenManager.tokenRefreshListener = {  }
+    }
+
     fun authenticateWithCustomToken(customToken: String, callback: ((Boolean, Throwable?) -> Unit)? = null) {
         scope.launch(CoroutineExceptionHandler { _, e ->
             RioLogger.log("ExceptionHandler#getCloudObject: ${e.message} \nStackTrace: ${e.stackTraceToString()}")
